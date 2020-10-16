@@ -16,7 +16,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/metaverse/truss/truss"
-	"github.com/metaverse/truss/truss/execprotoc"
+	_ "github.com/metaverse/truss/truss/execprotoc"
 	"github.com/metaverse/truss/truss/getstarted"
 	"github.com/metaverse/truss/truss/parsesvcname"
 
