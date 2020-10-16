@@ -16,7 +16,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/metaverse/truss/truss"
-	_ "github.com/metaverse/truss/truss/execprotoc"
+	"github.com/metaverse/truss/truss/execprotoc"
 	"github.com/metaverse/truss/truss/getstarted"
 	"github.com/metaverse/truss/truss/parsesvcname"
 
@@ -161,9 +161,9 @@ func parseInput() (*truss.Config, error) {
 	log.WithField("PB Package", cfg.PBPackage).Debug()
 	log.WithField("PB Path", cfg.PBPath).Debug()
 
-// 	if err := execprotoc.GeneratePBDotGo(cfg.DefPaths, cfg.GoPath, cfg.PBPath); err != nil {
-// 		return nil, errors.Wrap(err, "cannot create .pb.go files")
-// 	}
+	if err := execprotoc.GeneratePBDotGo(cfg.DefPaths, cfg.GoPath, cfg.PBPath); err != nil {
+		return nil, errors.Wrap(err, "cannot create .pb.go files")
+	}
 
 	// Service Path
 	svcName, err := parsesvcname.FromPaths(cfg.GoPath, cfg.DefPaths)
