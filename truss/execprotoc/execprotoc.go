@@ -3,21 +3,20 @@
 package execprotoc
 
 import (
+	"github.com/gogo/protobuf/proto"
+	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-
-	"github.com/gogo/protobuf/proto"
-	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
-	"github.com/pkg/errors"
 )
 
 // GeneratePBDotGo creates .pb.go files from the passed protoPaths and writes
 // them to outDir.
 func GeneratePBDotGo(protoPaths, gopath []string, outDir string) error {
 
-	genGoCode := "--gogofaster_out=" +
+	genGoCode := "--gofast_out=" +
 		"Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types," +
 		"Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types," +
 		"Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types," +
@@ -110,6 +109,49 @@ func protoc(protoPaths, gopath []string, plugin string) error {
 	}
 
 	cmdArgs = append(cmdArgs, plugin)
+
+	validate, err := exec.Command(
+		"go",
+		"list",
+		"-m",
+		"-f",
+		"{{.Dir}}",
+		"github.com/envoyproxy/protoc-gen-validate",
+	).CombinedOutput()
+
+	if err != nil {
+		return errors.Wrapf(err,
+			"go list exec failed.\ngo list output:\n\n%v\n",
+			string(validate))
+	}
+	validate = validate[0:len(validate)-1]
+
+	gateway, err := exec.Command(
+		"go",
+		"list",
+		"-m",
+		"-f",
+		"{{.Dir}}",
+		"github.com/grpc-ecosystem/grpc-gateway/v2",
+	).CombinedOutput()
+
+	if err != nil {
+		return errors.Wrapf(err,
+			"go list exec failed.\ngo list output:\n\n%v\n",
+			string(gateway))
+	}
+	gateway = gateway[0:len(gateway)-1]
+
+	cmdArgs = append(cmdArgs,
+		"--proto_path="+string(validate),
+		"--proto_path="+string(gateway)+"/third_party/googleapis",
+		"--proto_path="+string(gateway),
+		"--openapiv2_out=./doc",
+		"--openapiv2_opt=logtostderr=true",
+		"--validate_out",
+		"lang=go:.",
+	)
+
 	// Append each definition file path to the end of that command args
 	cmdArgs = append(cmdArgs, protoPaths...)
 
